@@ -21,10 +21,13 @@ from mpisppy.utils import config
 
 # Use this random stream:
 farmerstream = np.random.RandomState()
+relstream = np.random.RandomState()
+totstream = np.random.RandomState()
 
 def scenario_creator(
     scenario_name, use_integer=False, sense=pyo.minimize, crops_multiplier=1,
-        num_scens=None, seedoffset=0
+        num_scens=None, seedoffset=0, perturb_method = None, total_perturb=0, 
+        totseed=0, rel_perturb=0, relseed=0,
 ):
     """ Create a scenario for the (scalable) farmer example.
     
@@ -42,7 +45,22 @@ def scenario_creator(
         num_scens (int, optional):
             Number of scenarios. We use it to compute _mpisppy_probability. 
             Default is None.
-        seedoffset (int): used by confidence interval code
+        seedoffset (int, optional): 
+            Used by confidence interval code
+        perturb_method (str, optional): 
+            Determines the method of perturbation. Must be 'total', 
+            'relative', 'both', or None. Default is None.
+        total_perturb (float, optional): 
+            Determines the magnitude of the perturbation for total yield.
+            Default is 0.
+        totseed (int, optional): 
+            Used to replicate the perturbation of the total yield
+        rel_perturb (float, optional):
+            Determines the magnitude of the perturbation for relative yields.
+            Default is 0.
+        relseed (int, optional): 
+            Used to replicate the perturbation of the relative yield
+
     """
     # scenario_name has the form <str><int> e.g. scen12, foobar7
     # The digits are scraped off the right of scenario_name using regex then
@@ -59,9 +77,18 @@ def scenario_creator(
     # as a kwarg to scenario_creator then use seed+scennum as the seed argument.
     farmerstream.seed(scennum+seedoffset)
 
+    # When perturbing the yield inputs, the perturbation seeds adds randomness 
+    # independent of seedoffset
+    relstream.seed(scennum+relseed)
+    totstream.seed(scennum+totseed)
+
     # Check for minimization vs. maximization
     if sense not in [pyo.minimize, pyo.maximize]:
         raise ValueError("Model sense Not recognized")
+    
+    # Check for valid perturbation method
+    if perturb_method not in [None, 'total', 'relative', 'both']:
+        raise ValueError("Perturbation method not recognized")
 
     # Create the concrete model object
     model = pysp_instance_creation_callback(
@@ -69,6 +96,9 @@ def scenario_creator(
         use_integer=use_integer,
         sense=sense,
         crops_multiplier=crops_multiplier,
+        perturb_method=perturb_method,
+        total_perturb=total_perturb,
+        rel_perturb=rel_perturb,
     )
 
     # Create the list of nodes associated with the scenario (for two stage,
@@ -83,7 +113,8 @@ def scenario_creator(
     return model
 
 def pysp_instance_creation_callback(
-    scenario_name, use_integer=False, sense=pyo.minimize, crops_multiplier=1
+    scenario_name, use_integer=False, sense=pyo.minimize, crops_multiplier=1, 
+    perturb_method=None, total_perturb=0, rel_perturb=0,
 ):
     # long function to create the entire model
     # scenario_name is a string (e.g. AboveAverageScenario0)
@@ -147,6 +178,16 @@ def pysp_instance_creation_callback(
         {'WHEAT':2.5,'CORN':3.0,'SUGAR_BEETS':20.0}
     Yield['AboveAverageScenario'] = \
         {'WHEAT':3.0,'CORN':3.6,'SUGAR_BEETS':24.0}
+    
+    if perturb_method == 'total' or perturb_method == 'both':
+        perturbed_ratio = 1 + totstream.normal(0, 2) * total_perturb
+        for crop, yield_value in Yield[scenario_base_name].items():
+            Yield[scenario_base_name][crop] = yield_value * perturbed_ratio  
+
+    if perturb_method == 'relative' or perturb_method == 'both':
+        for crop, yield_value in Yield[scenario_base_name].items():
+            perturbed_ratio = 1 + relstream.normal(0, 2) * rel_perturb
+            Yield[scenario_base_name][crop] = yield_value * perturbed_ratio
 
     def Yield_init(m, cropname):
         # yield as in "crop yield"
