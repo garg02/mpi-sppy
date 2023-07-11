@@ -1,0 +1,17 @@
+name: mpisppy
+
+channels:
+  - conda-forge
+  - gurobi
+  - defaults
+
+dependencies:
+  - python
+  - pip
+  - numpy
+  - scipy
+  - pandas
+  - pyomo
+  - mpi4py
+  - gurobi
+  - dill
