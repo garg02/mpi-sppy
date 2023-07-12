@@ -4,6 +4,9 @@ import os
 import json
 import matplotlib.pyplot as plt
 
+# script to run the farmer_perturb_PH.py script for different values of total_perturb
+# and save the results in a csv file. Also, plot the relationship between the objective
+
 num_scens = 3
 max_iterations = 500
 solver_name = "gurobi_persistent"
@@ -14,7 +17,7 @@ perturb_step = 0.01
 for perturb in range(int(perturb_range[0] / perturb_step), int(perturb_range[1] / perturb_step) + 1):
     total_perturb = perturb * perturb_step
 
-    cmd = f"python farmer_PH_rdd.py --num-scens {num_scens} --max-iterations {max_iterations} --solver-name {solver_name} --default-rho {default_rho} --total-perturb {total_perturb}"
+    cmd = f"python farmer_perturb_PH.py --num-scens {num_scens} --max-iterations {max_iterations} --solver-name {solver_name} --default-rho {default_rho} --total-perturb {total_perturb}"
     subprocess.run(cmd, shell=True)
 
 results_dir = "results"
