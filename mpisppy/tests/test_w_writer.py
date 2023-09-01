@@ -26,8 +26,8 @@ from mpisppy.spin_the_wheel import WheelSpinner
 from mpisppy.tests.utils import get_solver,round_pos_sig
 import mpisppy.utils.gradient as grad
 import mpisppy.utils.find_rho as find_rho
-from mpisppy.utils.wxbarwriter import WXBarWriter
-from mpisppy.utils.wxbarreader import WXBarReader
+from mpisppy.extensions.wxbarwriter import WXBarWriter
+from mpisppy.extensions.wxbarreader import WXBarReader
 
 
 __version__ = 0.1
@@ -81,7 +81,7 @@ class Test_w_writer_farmer(unittest.TestCase):
     def setUp(self):
         self.cfg = _create_cfg()
         self.ph_object = None
-    
+
     def test_wwriter(self):
         self.ph_object = self._create_ph_farmer(ph_extensions=WXBarWriter, max_iter=5)
         with open(self.temp_w_file_name, 'r') as f:

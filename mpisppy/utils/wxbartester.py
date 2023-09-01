@@ -1,13 +1,13 @@
 # Copyright 2020 by B. Knueven, D. Mildebrath, C. Muir, J-P Watson, and D.L. Woodruff
 # This software is distributed under the 3-clause BSD License.
-''' Driver script to test the w/xbar read/write extensions using UC 
+''' Driver script to test the w/xbar read/write extensions using UC
 '''
 
 import mpisppy.tests.examples.uc.uc_funcs as uc_funcs
 # this version is locked to three scenarios
 
-from mpisppy.utils.wxbarwriter import WXBarWriter
-from mpisppy.utils.wxbarreader import WXBarReader
+from mpisppy.extensions.wxbarwriter import WXBarWriter
+from mpisppy.extensions.wxbarreader import WXBarReader
 import os
 
 from mpisppy.opt.ph import PH

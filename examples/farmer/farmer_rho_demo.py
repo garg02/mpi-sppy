@@ -20,7 +20,7 @@ from mpisppy.extensions.norm_rho_updater import NormRhoUpdater
 from mpisppy.convergers.norm_rho_converger import NormRhoConverger
 import mpisppy.utils.gradient as grad
 import mpisppy.utils.find_rho as find_rho
-from mpisppy.utils.wxbarwriter import WXBarWriter
+from mpisppy.extensions.wxbarwriter import WXBarWriter
 from mpisppy.extensions.gradient_extension import Gradient_extension
 
 write_solution = False
@@ -28,12 +28,12 @@ write_solution = False
 def _parse_args():
     # create a config object and parse
     cfg = config.Config()
-    
+
     cfg.num_scens_required()
     cfg.popular_args()
     cfg.two_sided_args()
-    cfg.ph_args()    
-    cfg.aph_args()    
+    cfg.ph_args()
+    cfg.aph_args()
     cfg.xhatlooper_args()
     cfg.fwph_args()
     cfg.lagrangian_args()
@@ -44,7 +44,7 @@ def _parse_args():
     cfg.add_to_config("crops_mult",
                          description="There will be 3x this many crops (default 1)",
                          domain=int,
-                         default=1)                
+                         default=1)
     cfg.add_to_config("use_norm_rho_updater",
                          description="Use the norm rho updater extension",
                          domain=bool,
@@ -65,9 +65,9 @@ def _parse_args():
     cfg.parse_command_line("farmer_demo")
     return cfg
 
-    
+
 def main():
-    
+
     cfg = _parse_args()
 
     num_scen = cfg.num_scens
@@ -84,7 +84,7 @@ def main():
             ph_converger = NormRhoConverger
     else:
         ph_converger = None
-    
+
     scenario_creator = farmer.scenario_creator
     scenario_denouement = farmer.scenario_denouement
     all_scenario_names = farmer.scenario_names_creator(cfg.num_scens)
@@ -114,11 +114,11 @@ def main():
                                   ph_extensions=ph_extensions,
                                   ph_converger=ph_converger,
                                   rho_setter=None)
-        
+
     #gradient extension kwargs
     if cfg.rho_setter:
         hub_dict['opt_kwargs']['options']['gradient_extension_options'] = {'cfg': cfg}
-    
+
     ## hack in adaptive rho
     if cfg.use_norm_rho_updater:
         hub_dict['opt_kwargs']['extensions'] = NormRhoUpdater
@@ -147,7 +147,7 @@ def main():
     # xhat shuffle bound spoke
     if cfg.xhatshuffle:
         xhatshuffle_spoke = vanilla.xhatshuffle_spoke(*beans, scenario_creator_kwargs=scenario_creator_kwargs)
-        
+
     list_of_spoke_dict = list()
     if cfg.fwph:
         list_of_spoke_dict.append(fw_spoke)

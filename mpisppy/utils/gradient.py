@@ -24,7 +24,7 @@ import mpisppy.utils.sputils as sputils
 import mpisppy.spopt
 from mpisppy.utils import config
 import mpisppy.utils.cfg_vanilla as vanilla
-from mpisppy.utils.wxbarwriter import WXBarWriter
+from mpisppy.extensions.wxbarwriter import WXBarWriter
 from mpisppy.spin_the_wheel import WheelSpinner
 import mpisppy.confidence_intervals.ciutils as ciutils
 from pyomo.contrib.pynumero.interfaces.pyomo_nlp import PyomoNLP
@@ -37,13 +37,13 @@ import mpisppy.phbase as phbase
 # Could also pass, e.g., sys.stdout instead of a filename
 """mpisppy.log.setup_logger("mpisppy.utils.find_grad",
                          "findgrad.log",
-                         level=logging.CRITICAL)                         
+                         level=logging.CRITICAL)
 logger = logging.getLogger("mpisppy.utils.find_grad")"""
 
 ############################################################################
 class Find_Grad():
     """Interface to compute and write gradient cost
-    
+
     Args:
        ph_object (PHBase): ph object
        cfg (Config): config object
@@ -64,11 +64,11 @@ class Find_Grad():
 
     def compute_grad(self, sname, scenario):
         """ Computes gradient cost for a given scenario
-        
+
         Args:
            sname (str): the scenario name
            scenario (Pyomo Concrete Model): scenario
-        
+
         Returns:
            grad_cost (dict): a dictionnary {nonant indice: gradient cost}
 
@@ -79,11 +79,11 @@ class Find_Grad():
         grad_cost = {ndn_i: -grad[ndn_i[1]]
                      for ndn_i, var in scenario._mpisppy_data.nonant_indices.items()}
         return grad_cost
-        
+
 
     def find_grad_cost(self):
         """ Computes gradient cost for all scenarios.
-        
+
         ASSUMES:
            The cfg object should contain an xhat path corresponding to the xhat file.
 
@@ -91,7 +91,7 @@ class Find_Grad():
         if self.cfg.grad_cost_file == '': pass
         else:
             assert self.cfg.xhatpath != '', "to compute gradient cost, you have to give an xhat path using --xhatpath"
-            
+
             self.ph_object.disable_W_and_prox()
             xhatfile = self.cfg.xhatpath
             xhat = ciutils.read_xhat(xhatfile)
@@ -104,8 +104,8 @@ class Find_Grad():
                     for v in node.nonant_vardata_list:
                         v.unfix()
 
-            grad_cost ={sname: self.compute_grad(sname, scenario) 
-                        for sname, scenario in self.ph_object.local_scenarios.items()} 
+            grad_cost ={sname: self.compute_grad(sname, scenario)
+                        for sname, scenario in self.ph_object.local_scenarios.items()}
             local_costs = {(sname, var.name): grad_cost[sname][node.name, ix]
                            for (sname, scenario) in self.ph_object.local_scenarios.items()
                            for node in scenario._mpisppy_node_list
@@ -114,7 +114,7 @@ class Find_Grad():
             costs = comm.gather(local_costs, root=0)
             rank = self.ph_object.cylinder_rank
             if (self.ph_object.cylinder_rank == 0):
-                self.c = {key: val 
+                self.c = {key: val
                           for cost in costs
                           for key, val in cost.items()}
             comm.Barrier()
@@ -125,7 +125,7 @@ class Find_Grad():
     def write_grad_cost(self):
         """ Writes gradient cost for all scenarios.
 
-        ASSUMES: 
+        ASSUMES:
            The cfg object should contain an xhat path corresponding to the xhat file.
 
         """
@@ -179,7 +179,7 @@ class Find_Grad():
 
 
 def _parser_setup():
-    """ Set up config object and return it, but don't parse 
+    """ Set up config object and return it, but don't parse
 
     Returns:
        cfg (Config): config object
@@ -195,7 +195,7 @@ def _parser_setup():
     cfg.popular_args()
     cfg.two_sided_args()
     cfg.ph_args()
-    
+
     cfg.gradient_args()
 
     return cfg
@@ -218,7 +218,7 @@ def grad_cost_and_rho(mname, original_cfg):
     cfg = copy.deepcopy(original_cfg)
     cfg.max_iterations = 0 #we only need x0 here
 
-    #create ph_object via vanilla           
+    #create ph_object via vanilla
     scenario_creator = model_module.scenario_creator
     scenario_denouement = model_module.scenario_denouement
     scen_names_creator_args = inspect.getfullargspec(model_module.scenario_names_creator).args #partition requires to do that
@@ -240,14 +240,12 @@ def grad_cost_and_rho(mname, original_cfg):
     wheel.spin() #TODO: steal only what's needed in  WheelSpinner
     if wheel.strata_rank == 0:  # don't do this for bound ranks
         ph_object = wheel.spcomm.opt
-    
-    #============================================================================== 
+
+    #==============================================================================
     # Compute grad cost and rhos
     Find_Grad(ph_object, cfg).write_grad_cost()
     Find_Grad(ph_object, cfg).write_grad_rho()
 
 
 if __name__ == "__main__":
-    print("call gradient.grad_cost_and_rho(modulename, cfg) and use --xhatpath --grad-cost-file --grad-rho-file to compute and write gradient cost and rho") 
-    
-    
+    print("call gradient.grad_cost_and_rho(modulename, cfg) and use --xhatpath --grad-cost-file --grad-rho-file to compute and write gradient cost and rho")

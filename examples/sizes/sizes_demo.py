@@ -70,7 +70,7 @@ if __name__ == "__main__":
     options["wtracker_options"] ={"wlen": 4,
                                   "reportlen": 6,
                                   "stdevthresh": 0.1}
-    
+
 
     all_scenario_names = list()
     for sn in range(ScenCount):
@@ -101,11 +101,11 @@ if __name__ == "__main__":
         scenario_creator,
         scenario_denouement,
         scenario_creator_kwargs={"scenario_count": ScenCount},
-        rho_setter=_rho_setter, 
+        rho_setter=_rho_setter,
         extensions=MultiExtension,
         extension_kwargs=multi_ext,
     )
-    
+
     conv, obj, tbound = ph.ph_main()
     if ph.cylinder_rank == 0:
          print ("Trival bound =",tbound)
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     #quit()
 
     ############ test W and xbar writers and special joint reader  ############
-    from mpisppy.utils.wxbarwriter import WXBarWriter
-    
+    from mpisppy.extensions.wxbarwriter import WXBarWriter
+
     newph = mpisppy.opt.ph.PH(
         options,
         all_scenario_names,
@@ -129,8 +129,8 @@ if __name__ == "__main__":
 
     conv, obj, tbound = newph.ph_main()
     #####
-    from mpisppy.utils.wxbarreader import WXBarReader
-    
+    from mpisppy.extensions.wxbarreader import WXBarReader
+
     newph = mpisppy.opt.ph.PH(
         options,
         all_scenario_names,
@@ -162,7 +162,7 @@ if __name__ == "__main__":
                                            {"ROOT": "Scenario3"},
                                            "csvname": "specific.csv"}
 
-    conv = newph.ph_main(rho_setter=_rho_setter, 
+    conv = newph.ph_main(rho_setter=_rho_setter,
                          extensions=XhatSpecific)
 
     ######### bundles #########
@@ -176,7 +176,7 @@ if __name__ == "__main__":
         scenario_denouement,
         scenario_creator_kwargs={"scenario_count": ScenCount},
     )
-    
+
     conv = ph.ph_main(rho_setter=_rho_setter)
 
     ### avg, min, max extension #####
@@ -195,6 +195,3 @@ if __name__ == "__main__":
     from mpisppy.extensions.avgminmaxer import MinMaxAvg
     options["avgminmax_name"] =  "FirstStageCost"
     conv, obj, bnd = ph.ph_main()
-
-    
-
